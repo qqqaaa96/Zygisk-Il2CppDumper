@@ -14,13 +14,15 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 11
+          # 核心修改：将 Java 版本从 11 改为 17
+          java-version: 17
           cache: gradle
       - run: |
           chmod +x ./gradlew
           sed -i 's/moduleDescription = ".*"/moduleDescription = "Dump for ${{ github.event.inputs.package_name }}"/g' module.gradle
           sed -i 's/com.game.packagename/${{ github.event.inputs.package_name }}/g' module/src/main/cpp/game.h
           ./gradlew :module:assembleRelease
+      # 顺手把 v3 也升级到了 v4，避免 GitHub 以后完全停用 v3
       - uses: actions/upload-artifact@v4
         with:
           name: zygisk-il2cppdumper
