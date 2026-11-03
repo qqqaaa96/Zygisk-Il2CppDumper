@@ -18,6 +18,9 @@ jobs:
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        # 空字符串表示不额外安装任何旧版组件，修复 'tools' 找不到的报错
+        packages: ''
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
@@ -29,4 +32,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Zygisk-Il2CppDumper
+        # 打包生成的 zip 文件（Magisk/KernelSU 模块格式）
         path: module/build/outputs/module/release/*.zip
