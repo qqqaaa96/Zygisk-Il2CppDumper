@@ -1,36 +1,27 @@
-name: Build Zygisk Module
-
+name: Build
 on:
   workflow_dispatch:
+    inputs:
+      package_name:
+        description: "Package name of the game:"
+        required: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        # 空字符串表示不额外安装任何旧版组件，修复 'tools' 找不到的报错
-        packages: ''
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Build with Gradle
-      run: ./gradlew :module:assembleRelease
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Zygisk-Il2CppDumper
-        # 打包生成的 zip 文件（Magisk/KernelSU 模块格式）
-        path: module/build/outputs/module/release/*.zip
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: gradle
+      - run: |
+          chmod +x ./gradlew
+          sed -i 's/moduleDescription = ".*"/moduleDescription = "Dump for ${{ github.event.inputs.package_name }}"/g' module.gradle
+          sed -i 's/com.game.packagename/${{ github.event.inputs.package_name }}/g' module/src/main/cpp/game.h
+          ./gradlew :module:assembleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zygisk-il2cppdumper
+          path: out/magisk_module_release/
