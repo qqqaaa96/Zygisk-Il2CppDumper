@@ -11,19 +11,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          # 核心修改：将 Java 版本从 11 改为 17
           java-version: 17
           cache: gradle
+          
       - run: |
           chmod +x ./gradlew
+          # 替换 module.gradle 中的描述
           sed -i 's/moduleDescription = ".*"/moduleDescription = "Dump for ${{ github.event.inputs.package_name }}"/g' module.gradle
+          # 替换 game.h 中的包名
           sed -i 's/com.game.packagename/${{ github.event.inputs.package_name }}/g' module/src/main/cpp/game.h
+          # 开始编译
           ./gradlew :module:assembleRelease
-      # 顺手把 v3 也升级到了 v4，避免 GitHub 以后完全停用 v3
+          
       - uses: actions/upload-artifact@v4
         with:
-          name: zygisk-il2cppdumper
-          path: out/magisk_module_release/
+          name: zygisk-il2cppdumper-output
+          # 抓取所有编译输出产物，保证一定能找到文件
+          path: module/build/outputs/
+          
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zygisk-il2cppdumper-out
+          # 同时也抓取根目录的 out 文件夹（如果有的话）
+          path: out/
+          # 如果 out 文件夹不存在，不报错，继续执行
+          if-no-files-found: ignore
